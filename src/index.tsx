@@ -3,6 +3,8 @@ import { Command } from "commander";
 import { runLogin } from "./commands/auth/login.js";
 import { runProjectsList } from "./commands/projects/list.js";
 import { runProjectsCreate } from "./commands/projects/create.js";
+import { runProjectsShare } from "./commands/projects/share.js";
+import { runInitDemo } from "./commands/projects/init-demo.js";
 import { runCanvasGet } from "./commands/canvas/get.js";
 import { runCanvasAddNode } from "./commands/canvas/add-node.js";
 
@@ -22,11 +24,45 @@ program
     await runLogin(opts.url);
   });
 
-// Projects
+// Top-level aliases for common actions
+program
+  .command("list")
+  .alias("ls")
+  .description("List all your projects (alias for tara projects list)")
+  .action(async () => {
+    await runProjectsList();
+  });
+
+program
+  .command("create <name>")
+  .description("Create a new project (alias for tara projects create)")
+  .option("-d, --description <desc>", "Project description")
+  .action(async (name: string, opts: { description?: string }) => {
+    await runProjectsCreate(name, opts.description);
+  });
+
+program
+  .command("share <projectId>")
+  .description("Share a project publicly and get its public URL")
+  .option("--private", "Make project private instead of public")
+  .action(async (projectId: string, opts: { private?: boolean }) => {
+    await runProjectsShare(projectId, opts);
+  });
+
+program
+  .command("demo [name]")
+  .alias("init")
+  .description("Create a new project pre-populated with a Hello World node")
+  .action(async (name?: string) => {
+    await runInitDemo(name);
+  });
+
+// Projects namespace
 const projects = program.command("projects").description("Manage studio projects");
 
 projects
   .command("list")
+  .alias("ls")
   .description("List all your projects")
   .action(async () => {
     await runProjectsList();
@@ -40,7 +76,15 @@ projects
     await runProjectsCreate(name, opts.description);
   });
 
-// Canvas
+projects
+  .command("share <projectId>")
+  .description("Make a project public or private")
+  .option("--private", "Make project private instead")
+  .action(async (projectId: string, opts: { private?: boolean }) => {
+    await runProjectsShare(projectId, opts);
+  });
+
+// Canvas namespace
 const canvas = program.command("canvas").description("Read and write the project canvas");
 
 canvas
