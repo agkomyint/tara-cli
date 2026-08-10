@@ -10,6 +10,9 @@ type Props = {
   zoom?: number;
   x?: number;
   y?: number;
+  dataJson?: string;
+  locationKey?: string;
+  valueKey?: string;
 };
 
 type CanvasNode = {
@@ -26,7 +29,18 @@ type CanvasNode = {
 
 type CanvasDocument = { version: 1; nodes: any[] };
 
-function AddMapApp({ projectId, title, lat = 37.7749, lng = -122.4194, zoom = 4, x = 180, y = 180 }: Props) {
+function AddMapApp({
+  projectId,
+  title,
+  lat = 37.7749,
+  lng = -122.4194,
+  zoom = 4,
+  x = 180,
+  y = 180,
+  dataJson,
+  locationKey,
+  valueKey,
+}: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "done"; nodeId: string }
@@ -56,6 +70,9 @@ function AddMapApp({ projectId, title, lat = 37.7749, lng = -122.4194, zoom = 4,
             lat,
             lng,
             mapZoom: zoom,
+            ...(dataJson ? { rows: JSON.parse(dataJson) } : {}),
+            ...(locationKey ? { locationKey } : {}),
+            ...(valueKey ? { valueKey } : {}),
           },
         };
 
@@ -82,7 +99,7 @@ function AddMapApp({ projectId, title, lat = 37.7749, lng = -122.4194, zoom = 4,
       }
     }
     void run();
-  }, [projectId, title, lat, lng, zoom, x, y]);
+  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey]);
 
   if (state.status === "loading") return <Text color="yellow">Adding map &quot;{title}&quot; to canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -97,7 +114,17 @@ function AddMapApp({ projectId, title, lat = 37.7749, lng = -122.4194, zoom = 4,
 
 export async function runAddMap(
   projectId: string,
-  options: { title: string; lat?: number; lng?: number; zoom?: number; x?: number; y?: number },
+  options: {
+    title: string;
+    lat?: number;
+    lng?: number;
+    zoom?: number;
+    x?: number;
+    y?: number;
+    data?: string;
+    locationKey?: string;
+    valueKey?: string;
+  },
 ) {
   const { waitUntilExit } = render(
     <AddMapApp
@@ -108,6 +135,9 @@ export async function runAddMap(
       zoom={options.zoom}
       x={options.x}
       y={options.y}
+      dataJson={options.data}
+      locationKey={options.locationKey}
+      valueKey={options.valueKey}
     />,
   );
   await waitUntilExit();
