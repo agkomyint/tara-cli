@@ -139,6 +139,7 @@ program
   .option("-d, --data <dataJson>", "JSON dataset array for map heatmap")
   .option("--location-key <locationKey>", "Key in data representing location (e.g., 'country')", "country")
   .option("--value-key <valueKey>", "Key in data representing the metric (e.g., 'value')", "value")
+  .option("--gradient <colors>", "Comma-separated CSS colors for map heatmap gradient (e.g. '#3b82f6,#ef4444')")
   .option("--lat <lat>", "Latitude", parseFloat, 37.7749)
   .option("--lng <lng>", "Longitude", parseFloat, -122.4194)
   .option("--zoom <zoom>", "Map zoom level", parseInt, 4)

@@ -11,6 +11,8 @@ type Props = {
   dataJson: string;
   x?: number;
   y?: number;
+  xKey?: string;
+  yKey?: string;
 };
 
 type CanvasNode = {
@@ -27,7 +29,7 @@ type CanvasNode = {
 
 type CanvasDocument = { version: 1; nodes: any[] };
 
-function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160 }: Props) {
+function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160, xKey, yKey }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "done"; nodeId: string }
@@ -63,8 +65,11 @@ function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160 }
           height: 340,
           color: "paper",
           data: {
+            kind: "chart",
             chartType,
-            dataset: parsedData,
+            rows: parsedData,
+            xKey: xKey || (Array.isArray(parsedData) && parsedData.length ? Object.keys(parsedData[0])[0] : "x"),
+            yKey: yKey || (Array.isArray(parsedData) && parsedData.length ? Object.keys(parsedData[0])[1] : "y"),
           },
         };
 
@@ -91,7 +96,7 @@ function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160 }
       }
     }
     void run();
-  }, [projectId, chartType, title, dataJson, x, y]);
+  }, [projectId, chartType, title, dataJson, x, y, xKey, yKey]);
 
   if (state.status === "loading") return <Text color="yellow">Adding [{chartType}] chart to canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -106,7 +111,7 @@ function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160 }
 
 export async function runAddChart(
   projectId: string,
-  options: { type?: string; title: string; data: string; x?: number; y?: number },
+  options: { type?: string; title: string; data: string; x?: number; y?: number; xKey?: string; yKey?: string },
 ) {
   const chartType = (options.type ?? "bar").toLowerCase() as ChartType;
   const { waitUntilExit } = render(
@@ -117,6 +122,8 @@ export async function runAddChart(
       dataJson={options.data}
       x={options.x}
       y={options.y}
+      xKey={options.xKey}
+      yKey={options.yKey}
     />,
   );
   await waitUntilExit();

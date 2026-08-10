@@ -13,6 +13,7 @@ type Props = {
   dataJson?: string;
   locationKey?: string;
   valueKey?: string;
+  gradient?: string;
 };
 
 type CanvasNode = {
@@ -40,6 +41,7 @@ function AddMapApp({
   dataJson,
   locationKey,
   valueKey,
+  gradient,
 }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
@@ -70,9 +72,10 @@ function AddMapApp({
             lat,
             lng,
             mapZoom: zoom,
-            ...(dataJson ? { rows: JSON.parse(dataJson) } : {}),
+            ...(dataJson ? { rows: JSON.parse(dataJson), focusData: true } : {}),
             ...(locationKey ? { locationKey } : {}),
             ...(valueKey ? { valueKey } : {}),
+            ...(gradient && gradient.includes(",") ? { gradient: gradient.split(",").map((c) => c.trim()) } : {}),
           },
         };
 
@@ -99,7 +102,7 @@ function AddMapApp({
       }
     }
     void run();
-  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey]);
+  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey, gradient]);
 
   if (state.status === "loading") return <Text color="yellow">Adding map &quot;{title}&quot; to canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -124,6 +127,7 @@ export async function runAddMap(
     data?: string;
     locationKey?: string;
     valueKey?: string;
+    gradient?: string;
   },
 ) {
   const { waitUntilExit } = render(
@@ -138,6 +142,7 @@ export async function runAddMap(
       dataJson={options.data}
       locationKey={options.locationKey}
       valueKey={options.valueKey}
+      gradient={options.gradient}
     />,
   );
   await waitUntilExit();
