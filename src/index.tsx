@@ -18,6 +18,7 @@ import { runCanvasClear } from "./commands/canvas/clear.js";
 import { runCanvasApply } from "./commands/canvas/apply.js";
 import { runCommandsList } from "./commands/meta/commands-list.js";
 import { runNodeTypes } from "./commands/canvas/node-types.js";
+import { runMcpServer } from "./mcp.js";
 
 const program = new Command();
 
@@ -25,6 +26,14 @@ program
   .name("tara")
   .description("Tara Workspace CLI — complete canvas and project control from your terminal")
   .version("0.1.0");
+
+// MCP Server for AI Agents (Cursor, Claude Desktop, Antigravity, VS Code, etc.)
+program
+  .command("mcp")
+  .description("Start the native stdio Model Context Protocol (MCP) server for AI Agents")
+  .action(async () => {
+    await runMcpServer();
+  });
 
 // Command Discovery
 program

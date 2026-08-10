@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^1.7.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "commander": "^12.1.0",
     "ink": "^5.0.1",
     "ink-spinner": "^5.0.0",
