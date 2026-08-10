@@ -250,6 +250,7 @@ canvas
   .option("--color <color>", "Node color")
   .option("--gradient <colors>", "Update the gradient color scale")
   .option("--region <region>", "Update the map region focus (or 'auto')")
+  .option("-d, --data <dataJson>", "Replace the node's data rows with a new JSON array")
   .action(async (projectId: string, nodeId: string, opts) => {
     await runCanvasUpdateNode(projectId, nodeId, opts);
   });
