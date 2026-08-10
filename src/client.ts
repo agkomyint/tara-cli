@@ -42,3 +42,36 @@ export async function apiRequest<T = unknown>(
 
   return data as T;
 }
+
+export async function apiUpload<T = unknown>(
+  path: string,
+  formData: FormData,
+): Promise<T> {
+  const apiKey = getApiKey();
+  const baseUrl = getBaseUrl();
+
+  const res = await fetch(`${baseUrl}${path}`, {
+    method: "POST",
+    headers: {
+      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+    },
+    body: formData,
+  });
+
+  let data: unknown = null;
+  try {
+    data = await res.json();
+  } catch {
+    data = null;
+  }
+
+  if (!res.ok) {
+    const err = data as { error?: string; message?: string } | null;
+    throw new TaraAPIError(
+      err?.message ?? err?.error ?? `HTTP ${res.status}`,
+      res.status,
+    );
+  }
+
+  return data as T;
+}
