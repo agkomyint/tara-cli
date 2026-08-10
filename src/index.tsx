@@ -19,15 +19,29 @@ import { runCanvasApply } from "./commands/canvas/apply.js";
 import { runCommandsList } from "./commands/meta/commands-list.js";
 import { runNodeTypes } from "./commands/canvas/node-types.js";
 import { runMcpServer } from "./mcp.js";
+import { runContext } from "./commands/meta/context.js";
 
 const program = new Command();
 
 program
   .name("tara")
-  .description("Tara Workspace CLI — complete canvas and project control from your terminal")
+  .description(
+    "Tara Workspace CLI — complete canvas and project control from your terminal.\n\n🤖 AI Agents: Run `tara context` (or `tara context --json`) to self-discover full automation capabilities, supported node types, and syntax.",
+  )
   .version("0.1.0");
 
-// MCP Server for AI Agents (Cursor, Claude Desktop, Antigravity, VS Code, etc.)
+// Context & Agent Guidance
+program
+  .command("context")
+  .alias("guide")
+  .alias("info")
+  .description("Output full AI agent context, canvas possibilities, node types, and executable action manifest")
+  .option("--json", "Output machine-readable context block for LLM prompts")
+  .action(async (opts: { json?: boolean }) => {
+    await runContext(opts);
+  });
+
+// MCP Server for AI Agents
 program
   .command("mcp")
   .description("Start the native stdio Model Context Protocol (MCP) server for AI Agents")
