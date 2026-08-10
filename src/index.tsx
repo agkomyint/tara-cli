@@ -18,7 +18,6 @@ import { runCanvasClear } from "./commands/canvas/clear.js";
 import { runCanvasApply } from "./commands/canvas/apply.js";
 import { runCommandsList } from "./commands/meta/commands-list.js";
 import { runNodeTypes } from "./commands/canvas/node-types.js";
-import { runMcpServer } from "./mcp.js";
 import { runContext } from "./commands/meta/context.js";
 
 const program = new Command();
@@ -41,13 +40,7 @@ program
     await runContext(opts);
   });
 
-// MCP Server for AI Agents
-program
-  .command("mcp")
-  .description("Start the native stdio Model Context Protocol (MCP) server for AI Agents")
-  .action(async () => {
-    await runMcpServer();
-  });
+
 
 // Command Discovery
 program
