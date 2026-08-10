@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
+import { calculateNextPosition } from "./utils.js";
 
 type Props = {
   projectId: string;
@@ -14,6 +15,7 @@ type Props = {
   locationKey?: string;
   valueKey?: string;
   gradient?: string;
+  region?: string;
 };
 
 type CanvasNode = {
@@ -36,12 +38,13 @@ function AddMapApp({
   lat = 37.7749,
   lng = -122.4194,
   zoom = 4,
-  x = 180,
-  y = 180,
+  x,
+  y,
   dataJson,
   locationKey,
   valueKey,
   gradient,
+  region,
 }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
@@ -57,14 +60,16 @@ function AddMapApp({
         );
 
         const resolvedProjectId = current.projectId || projectId;
+        const pos = calculateNextPosition(current.document.nodes, x, y);
 
+        // 2. Create map node
         const newNodeId = crypto.randomUUID();
         const newNode: CanvasNode = {
           id: newNodeId,
           type: "map",
           text: title,
-          x,
-          y,
+          x: pos.x,
+          y: pos.y,
           width: 560,
           height: 380,
           color: "paper",
@@ -76,6 +81,7 @@ function AddMapApp({
             ...(locationKey ? { locationKey } : {}),
             ...(valueKey ? { valueKey } : {}),
             ...(gradient && gradient.includes(",") ? { gradient: gradient.split(",").map((c) => c.trim()) } : {}),
+            ...(region ? { region } : {}),
           },
         };
 
@@ -102,7 +108,7 @@ function AddMapApp({
       }
     }
     void run();
-  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey, gradient]);
+  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey, gradient, region]);
 
   if (state.status === "loading") return <Text color="yellow">Adding map &quot;{title}&quot; to canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -128,6 +134,7 @@ export async function runAddMap(
     locationKey?: string;
     valueKey?: string;
     gradient?: string;
+    region?: string;
   },
 ) {
   const { waitUntilExit } = render(
@@ -143,6 +150,7 @@ export async function runAddMap(
       locationKey={options.locationKey}
       valueKey={options.valueKey}
       gradient={options.gradient}
+      region={options.region}
     />,
   );
   await waitUntilExit();

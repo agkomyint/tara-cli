@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
+import { calculateNextPosition } from "./utils.js";
 
 type ChartType = "bar" | "line" | "area" | "scatter" | "pie";
 
@@ -29,7 +30,7 @@ type CanvasNode = {
 
 type CanvasDocument = { version: 1; nodes: any[] };
 
-function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160, xKey, yKey }: Props) {
+function AddChartApp({ projectId, chartType, title, dataJson, x, y, xKey, yKey }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "done"; nodeId: string }
@@ -52,6 +53,7 @@ function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160, 
         );
 
         const resolvedProjectId = current.projectId || projectId;
+        const pos = calculateNextPosition(current.document.nodes, x, y);
 
         // 2. Create chart node
         const newNodeId = crypto.randomUUID();
@@ -59,8 +61,8 @@ function AddChartApp({ projectId, chartType, title, dataJson, x = 160, y = 160, 
           id: newNodeId,
           type: "chart",
           text: title,
-          x,
-          y,
+          x: pos.x,
+          y: pos.y,
           width: 520,
           height: 340,
           color: "paper",

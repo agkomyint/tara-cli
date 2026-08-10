@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
+import { calculateNextPosition } from "./utils.js";
 
 type CanvasNode = {
   id: string;

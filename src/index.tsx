@@ -140,6 +140,7 @@ program
   .option("--location-key <locationKey>", "Key in data representing location (e.g., 'country')", "country")
   .option("--value-key <valueKey>", "Key in data representing the metric (e.g., 'value')", "value")
   .option("--gradient <colors>", "Comma-separated CSS colors for map heatmap gradient (e.g. '#3b82f6,#ef4444')")
+  .option("--region <region>", "Map region to focus on (world, europe, asia, asean, africa, northAmerica, southAmerica, oceania)")
   .option("--lat <lat>", "Latitude", parseFloat, 37.7749)
   .option("--lng <lng>", "Longitude", parseFloat, -122.4194)
   .option("--zoom <zoom>", "Map zoom level", parseInt, 4)
@@ -248,6 +249,7 @@ canvas
   .option("--height <height>", "Height", (v) => parseInt(v, 10))
   .option("--color <color>", "Node color")
   .option("--gradient <colors>", "Update the gradient color scale")
+  .option("--region <region>", "Update the map region focus (or 'auto')")
   .action(async (projectId: string, nodeId: string, opts) => {
     await runCanvasUpdateNode(projectId, nodeId, opts);
   });
