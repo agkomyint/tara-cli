@@ -16,6 +16,7 @@ import { runCanvasUpdateNode } from "./commands/canvas/update-node.js";
 import { runCanvasRemoveNode } from "./commands/canvas/remove-node.js";
 import { runCanvasClear } from "./commands/canvas/clear.js";
 import { runCanvasApply } from "./commands/canvas/apply.js";
+import { runCommandsList } from "./commands/meta/commands-list.js";
 
 const program = new Command();
 
@@ -23,6 +24,15 @@ program
   .name("tara")
   .description("Tara Workspace CLI — complete canvas and project control from your terminal")
   .version("0.1.0");
+
+// Command Discovery
+program
+  .command("commands")
+  .description("List all available CLI commands in a structured root & 2nd-level hierarchy")
+  .option("--json", "Output structured JSON command registry")
+  .action((opts: { json?: boolean }) => {
+    runCommandsList(opts);
+  });
 
 // Auth
 program
@@ -40,6 +50,14 @@ program
   .description("List all your projects")
   .action(async () => {
     await runProjectsList();
+  });
+
+program
+  .command("nodes <projectId>")
+  .description("List all canvas nodes for a project")
+  .option("--json", "Output raw JSON (pipe-friendly)")
+  .action(async (projectId: string, opts: { json?: boolean }) => {
+    await runCanvasGet(projectId, opts);
   });
 
 program
