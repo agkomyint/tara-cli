@@ -24,8 +24,8 @@ export async function runContext(options: { json?: boolean }) {
     },
     {
       action: "update_node",
-      syntax: "tara canvas update-node <project> <nodeId> [--text] [--x] [--y] [--color]",
-      description: "Move, resize, edit text, or restyle a specific node on canvas",
+      syntax: "tara canvas update-node <project> <nodeId> [--text] [--color] [-d <dataJson>] [--region <region>]",
+      description: "Edit text, restyle, update data payload (for charts/maps), or change map region",
     },
     {
       action: "upload_asset",
@@ -39,8 +39,13 @@ export async function runContext(options: { json?: boolean }) {
     },
     {
       action: "render_map",
-      syntax: "tara map <project> -t <title> [--lat] [--lng] [--zoom]",
-      description: "Create interactive geospatial map node on canvas",
+      syntax: "tara map <project> -t <title> -d '[...]' --location-key <key> --value-key <key> [--region europe|africa|etc]",
+      description: "Create interactive geospatial map node on canvas, supports region zooming",
+    },
+    {
+      action: "add_source",
+      syntax: "tara canvas add-node <project> --type embed --source-url <url> -d '{\"kind\":\"source\",\"host\":\"...\"}'",
+      description: "Add a citation or source reference to the canvas project sidebar",
     },
   ];
 
@@ -53,9 +58,10 @@ export async function runContext(options: { json?: boolean }) {
     { type: "document", label: "Document", defaultSize: "420x560px", capabilities: "resizable, computable (PDF, text)" },
     { type: "html", label: "HTML", defaultSize: "640x420px", capabilities: "resizable, sandboxed" },
     { type: "chart", label: "Chart", defaultSize: "520x340px", capabilities: "resizable, computable (bar, line, pie)" },
-    { type: "map", label: "Map", defaultSize: "560x380px", capabilities: "resizable, computable (lat/lng)" },
+    { type: "map", label: "Map", defaultSize: "560x380px", capabilities: "resizable, computable (lat/lng, region bounds)" },
     { type: "model3d", label: "3D model", defaultSize: "520x420px", capabilities: "resizable, playable (gltf-binary)" },
     { type: "compute", label: "Query", defaultSize: "432x260px", capabilities: "resizable, computable" },
+    { type: "embed", label: "Embed/Source", defaultSize: "320x180px", capabilities: "URL embeds, Sidebar sources" },
   ];
 
   const colors = ["paper (White)", "sun (Yellow)", "mint (Green)", "sky (Blue)", "coral (Pink)"];
@@ -71,7 +77,7 @@ export async function runContext(options: { json?: boolean }) {
           nodeTypes,
           colors,
           agentInstructions:
-            "AI Agents can execute tara CLI commands via standard shell execution tools (bash/run_command). Use 'tara list' to find projects, 'tara nodes <project>' to inspect nodes, 'tara canvas add-batch' to create multiple nodes, and 'tara arrange' to auto-layout the canvas.",
+            "AI Agents can execute tara CLI commands via standard shell execution tools (bash/run_command). Use 'tara list' to find projects, 'tara nodes <project>' to inspect nodes. Maps support smart auto-placement and --region zooming. Individual node data rows can be updated via 'update-node -d <json>'. Add URL sources using 'add-node --type embed --source-url <url> -d '{\"kind\":\"source\"}'.",
         },
         null,
         2,
@@ -113,7 +119,9 @@ Color Presets: ${colors.join(", ")}
 • Add multiple nodes:  tara canvas add-batch "<projectName>" --nodes '[{"text":"Task 1","type":"goal"}]'
 • Auto-grid layout:    tara arrange "<projectName>" --columns 3
 • Upload file:         tara upload "<projectName>" ./file.png
-• Move / Edit node:    tara canvas update-node "<projectName>" <nodeId> --text "New text" --x 200 --y 300
+• Move / Edit node:    tara canvas update-node "<projectName>" <nodeId> --text "New text" --x 200
+• Update node data:    tara canvas update-node "<projectName>" <nodeId> -d '[{"country": "Mali", "temp": 35}]'
+• Add a Source:        tara canvas add-node "<projectName>" --type embed --source-url "https://example.com" -d '{"kind":"source","host":"example.com"}'
 • Discover commands:   tara commands --json
 
 ================================================================================
