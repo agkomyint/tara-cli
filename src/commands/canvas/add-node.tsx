@@ -12,11 +12,13 @@ type CanvasNode = {
   height: number;
   text: string;
   color: "paper" | "sun" | "mint" | "sky" | "coral";
+  sourceUrl?: string;
+  data?: Record<string, unknown>;
 };
 
 type CanvasDocument = { version: 1; nodes: CanvasNode[] };
 
-type NodeType = "text" | "note" | "goal" | "image" | "document" | "html" | "chart" | "map" | "compute";
+type NodeType = "text" | "note" | "goal" | "image" | "document" | "html" | "chart" | "map" | "compute" | "embed";
 
 const DEFAULT_SIZES: Record<NodeType, { width: number; height: number }> = {
   text: { width: 280, height: 100 },
@@ -28,6 +30,7 @@ const DEFAULT_SIZES: Record<NodeType, { width: number; height: number }> = {
   chart: { width: 520, height: 340 },
   map: { width: 560, height: 380 },
   compute: { width: 432, height: 260 },
+  embed: { width: 320, height: 180 },
 };
 
 type Props = {
@@ -37,9 +40,11 @@ type Props = {
   x: number;
   y: number;
   color?: string;
+  sourceUrl?: string;
+  dataJson?: string;
 };
 
-function AddNodeApp({ projectId, type, text, x, y, color }: Props) {
+function AddNodeApp({ projectId, type, text, x, y, color, sourceUrl, dataJson }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "done"; nodeId: string }
@@ -65,6 +70,8 @@ function AddNodeApp({ projectId, type, text, x, y, color }: Props) {
           width: size.width,
           height: size.height,
           color: (color as CanvasNode["color"]) ?? (type === "note" ? "sun" : "paper"),
+          ...(sourceUrl ? { sourceUrl } : {}),
+          ...(dataJson ? { data: JSON.parse(dataJson) } : {}),
         };
 
         // 3. Save updated document
@@ -91,7 +98,7 @@ function AddNodeApp({ projectId, type, text, x, y, color }: Props) {
       }
     }
     void run();
-  }, [projectId, type, text, x, y, color]);
+  }, [projectId, type, text, x, y, color, sourceUrl, dataJson]);
 
   if (state.status === "loading") return <Text color="yellow">Adding node...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -106,7 +113,7 @@ function AddNodeApp({ projectId, type, text, x, y, color }: Props) {
 
 export async function runCanvasAddNode(
   projectId: string,
-  options: { type?: string; text: string; x?: number; y?: number; color?: string },
+  options: { type?: string; text: string; x?: number; y?: number; color?: string; sourceUrl?: string; data?: string },
 ) {
   const { waitUntilExit } = render(
     <AddNodeApp
@@ -116,6 +123,8 @@ export async function runCanvasAddNode(
       x={options.x ?? 100}
       y={options.y ?? 100}
       color={options.color}
+      sourceUrl={options.sourceUrl}
+      dataJson={options.data}
     />,
   );
   await waitUntilExit();

@@ -226,6 +226,8 @@ canvas
   .option("--x <x>", "X position", (v) => parseInt(v, 10), 100)
   .option("--y <y>", "Y position", (v) => parseInt(v, 10), 100)
   .option("--color <color>", "Node color (paper, sun, mint, sky, coral)")
+  .option("--source-url <url>", "Source URL for embed nodes")
+  .option("-d, --data <dataJson>", "JSON data block")
   .action(async (projectId: string, opts) => {
     await runCanvasAddNode(projectId, opts);
   });
