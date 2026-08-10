@@ -11,6 +11,7 @@ type Props = {
   width?: number;
   height?: number;
   color?: string;
+  gradient?: string;
 };
 
 type CanvasNode = {
@@ -26,7 +27,7 @@ type CanvasNode = {
 
 type CanvasDocument = { version: 1; nodes: CanvasNode[] };
 
-function UpdateNodeApp({ projectId, nodeId, text, x, y, width, height, color }: Props) {
+function UpdateNodeApp({ projectId, nodeId, text, x, y, width, height, color, gradient }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "done"; updatedNode: CanvasNode }
@@ -54,6 +55,14 @@ function UpdateNodeApp({ projectId, nodeId, text, x, y, width, height, color }: 
               ...(height !== undefined ? { height } : {}),
               ...(color !== undefined ? { color } : {}),
             };
+            
+            if (gradient) {
+              target.data = {
+                ...(target.data as Record<string, unknown> || {}),
+                gradient: gradient.includes(",") ? gradient.split(",").map(c => c.trim()) : null,
+              };
+            }
+            
             return target;
           }
           return node;
@@ -79,7 +88,7 @@ function UpdateNodeApp({ projectId, nodeId, text, x, y, width, height, color }: 
       }
     }
     void run();
-  }, [projectId, nodeId, text, x, y, width, height, color]);
+  }, [projectId, nodeId, text, x, y, width, height, color, gradient]);
 
   if (state.status === "loading") return <Text color="yellow">Updating node on canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -95,7 +104,7 @@ function UpdateNodeApp({ projectId, nodeId, text, x, y, width, height, color }: 
 export async function runCanvasUpdateNode(
   projectId: string,
   nodeId: string,
-  options: { text?: string; x?: number; y?: number; width?: number; height?: number; color?: string },
+  options: { text?: string; x?: number; y?: number; width?: number; height?: number; color?: string; gradient?: string },
 ) {
   const { waitUntilExit } = render(
     <UpdateNodeApp
@@ -107,6 +116,7 @@ export async function runCanvasUpdateNode(
       width={options.width}
       height={options.height}
       color={options.color}
+      gradient={options.gradient}
     />,
   );
   await waitUntilExit();

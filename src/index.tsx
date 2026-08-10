@@ -247,6 +247,7 @@ canvas
   .option("--width <width>", "Width", (v) => parseInt(v, 10))
   .option("--height <height>", "Height", (v) => parseInt(v, 10))
   .option("--color <color>", "Node color")
+  .option("--gradient <colors>", "Update the gradient color scale")
   .action(async (projectId: string, nodeId: string, opts) => {
     await runCanvasUpdateNode(projectId, nodeId, opts);
   });
