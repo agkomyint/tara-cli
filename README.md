@@ -4,6 +4,17 @@ Terminal interface for [Tara Workspace](https://taraspace.space) — control you
 
 ## Installation
 
+**For local development (use `tara` from anywhere on this machine):**
+
+```bash
+cd D:\tara-work-cli
+npm install
+npm run build
+npm link        # registers `tara` globally — re-run this after re-cloning
+```
+
+**From npm (once published):**
+
 ```bash
 npm install -g @tara/cli
 ```
