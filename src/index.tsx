@@ -17,6 +17,7 @@ import { runCanvasRemoveNode } from "./commands/canvas/remove-node.js";
 import { runCanvasClear } from "./commands/canvas/clear.js";
 import { runCanvasApply } from "./commands/canvas/apply.js";
 import { runCommandsList } from "./commands/meta/commands-list.js";
+import { runNodeTypes } from "./commands/canvas/node-types.js";
 
 const program = new Command();
 
@@ -32,6 +33,15 @@ program
   .option("--json", "Output structured JSON command registry")
   .action((opts: { json?: boolean }) => {
     runCommandsList(opts);
+  });
+
+program
+  .command("node-types")
+  .alias("types")
+  .description("List all 13 supported canvas node types, default dimensions, capabilities, and color presets")
+  .option("--json", "Output machine-readable JSON array of node types")
+  .action(async (opts: { json?: boolean }) => {
+    await runNodeTypes(opts);
   });
 
 // Auth
@@ -170,6 +180,14 @@ projects
 
 // Canvas namespace
 const canvas = program.command("canvas").description("Read, write, layout, and control project canvas");
+
+canvas
+  .command("node-types")
+  .description("List all 13 supported canvas node types, default dimensions, capabilities, and color presets")
+  .option("--json", "Output machine-readable JSON array of node types")
+  .action(async (opts: { json?: boolean }) => {
+    await runNodeTypes(opts);
+  });
 
 canvas
   .command("get <projectId>")

@@ -48,6 +48,12 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
     description: "Full programmatic canvas orchestration and node manipulation",
     subcommands: [
       {
+        name: "node-types",
+        syntax: "tara node-types | tara types | tara canvas node-types",
+        description: "List all 13 supported canvas node types, default dimensions, capabilities, and color presets",
+        options: [{ flag: "--json", description: "Output machine-readable JSON array of node types" }],
+      },
+      {
         name: "get",
         syntax: "tara canvas get <projectId> | tara nodes <projectId>",
         description: "List all nodes on the project canvas with position, size, type, and text",
