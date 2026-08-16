@@ -31,8 +31,6 @@ type CanvasNode = {
   data?: Record<string, unknown>;
 };
 
-type CanvasDocument = { version: 1; nodes: CanvasNode[] };
-
 function UploadFileApp({ projectId, filePath, type: userType, x = 200, y = 200 }: Props) {
   const [state, setState] = useState<
     | { status: "loading"; message: string }
@@ -56,14 +54,18 @@ function UploadFileApp({ projectId, filePath, type: userType, x = 200, y = 200 }
         let nodeType = userType || "image";
         let mimeType = "image/png";
 
-        if (ext === ".csv" || ext === ".sqlite" || ext === ".db") {
+        if (ext === ".csv" || ext === ".sqlite" || ext === ".sqlite3" || ext === ".db" || ext === ".geojson") {
           uploadEndpoint = "/api/studio/projects/dataset-upload";
-          nodeType = userType || "compute";
-          mimeType = ext === ".csv" ? "text/csv" : "application/x-sqlite3";
+          nodeType = userType || (ext === ".geojson" ? "maplibre" : "document");
+          mimeType = ext === ".csv" ? "text/csv" : ext === ".geojson" ? "application/geo+json" : "application/x-sqlite3";
         } else if (ext === ".glb" || ext === ".gltf") {
           uploadEndpoint = "/api/studio/projects/model-upload";
           nodeType = userType || "model3d";
           mimeType = "model/gltf-binary";
+        } else if (ext === ".mp4" || ext === ".webm" || ext === ".mov") {
+          uploadEndpoint = "/api/studio/projects/asset-upload";
+          nodeType = userType || "video";
+          mimeType = ext === ".webm" ? "video/webm" : ext === ".mov" ? "video/quicktime" : "video/mp4";
         } else if (ext === ".jpg" || ext === ".jpeg") {
           mimeType = "image/jpeg";
         } else if (ext === ".gif") {
@@ -71,7 +73,7 @@ function UploadFileApp({ projectId, filePath, type: userType, x = 200, y = 200 }
         } else if (ext === ".webp") {
           mimeType = "image/webp";
         } else if (ext === ".pdf") {
-          uploadEndpoint = "/api/studio/projects/image-upload"; // Fallback asset endpoint
+          uploadEndpoint = "/api/studio/projects/asset-upload";
           nodeType = userType || "document";
           mimeType = "application/pdf";
         }
@@ -86,47 +88,36 @@ function UploadFileApp({ projectId, filePath, type: userType, x = 200, y = 200 }
 
         const uploadRes = await apiUpload<UploadResult>(uploadEndpoint, formData);
 
-        // 2. Fetch current canvas
-        setState({ status: "loading", message: "Updating canvas document..." });
-        const canvasRes = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
-        const resolvedProjectId = canvasRes.projectId || projectId;
-
-        // 3. Create Visual Node
+        // 2. Create the visual node through the atomic node API.
+        setState({ status: "loading", message: "Adding canvas node..." });
         const newNodeId = crypto.randomUUID();
-        const sourceUrl = uploadRes.publicUrl ?? `/api/uploads/images/${uploadRes.storageKey}`;
+        const isDataset = ext === ".csv" || ext === ".sqlite" || ext === ".sqlite3" || ext === ".db" || ext === ".geojson";
+        const sourceUrl = isDataset
+          ? `/api/studio/projects/datasets/${uploadRes.storageKey}`
+          : uploadRes.publicUrl ?? (nodeType === "image" ? `/api/uploads/images/${uploadRes.storageKey}` : `/api/uploads/assets/${uploadRes.storageKey}`);
 
-        const newNode: CanvasNode = {
+        const csvPreview = ext === ".csv" ? parseCsvPreview(fileBuffer.toString("utf8")) : null;
+
+        const newNode = {
           id: newNodeId,
           type: nodeType,
           text: fileName,
           x,
           y,
-          width: nodeType === "compute" ? 432 : nodeType === "model3d" ? 520 : 420,
-          height: nodeType === "compute" ? 260 : nodeType === "model3d" ? 420 : 300,
-          color: "paper",
           sourceUrl,
           mimeType,
           data: {
             storageKey: uploadRes.storageKey,
             fileName,
+            ...(ext === ".geojson"
+              ? { kind: "maplibre", geometryFormat: "geojson", featureKey: "id" }
+              : isDataset ? { kind: "dataset", extension: ext.slice(1), fileSize: fileBuffer.byteLength, columns: csvPreview?.columns ?? [], rows: csvPreview?.rows ?? [] } : {}),
           },
         };
 
-        const updatedDoc: CanvasDocument = {
-          version: 1,
-          nodes: [...canvasRes.document.nodes, newNode],
-        };
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: updatedDoc,
-            camera: canvasRes.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes`, {
+          method: "POST",
+          body: JSON.stringify({ node: newNode, idempotencyKey: newNodeId }),
         });
 
         setState({
@@ -155,6 +146,39 @@ function UploadFileApp({ projectId, filePath, type: userType, x = 200, y = 200 }
       {state.url && <Text dimColor>Asset URL: {state.url}</Text>}
     </Box>
   );
+}
+
+function parseCsvPreview(source: string, maxRows = 200) {
+  const lines = source.split(/\r?\n/).filter(Boolean).slice(0, maxRows + 1);
+  const columns = parseCsvLine(lines.shift() ?? "").map((value, index) => value.trim() || `Column ${index + 1}`);
+  const rows = lines.map((line) => {
+    const cells = parseCsvLine(line);
+    return Object.fromEntries(columns.map((column, index) => [column, parseCsvCell(cells[index] ?? "")]));
+  });
+  return { columns, rows };
+}
+
+function parseCsvLine(line: string) {
+  const cells: string[] = [];
+  let value = "";
+  let quoted = false;
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"') {
+      if (quoted && line[index + 1] === '"') { value += '"'; index += 1; }
+      else quoted = !quoted;
+    } else if (character === "," && !quoted) { cells.push(value); value = ""; }
+    else value += character;
+  }
+  cells.push(value);
+  return cells;
+}
+
+function parseCsvCell(value: string): string | number | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const numeric = Number(trimmed);
+  return Number.isFinite(numeric) ? numeric : trimmed;
 }
 
 export async function runUploadFile(

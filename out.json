@@ -1,0 +1,402 @@
+Loading canvas...
+{
+  "nodes": [
+    {
+      "x": -410.67625000672115,
+      "y": 481.2369524615765,
+      "id": "87549520-83ac-477e-90f0-b3a3ceda1fe1",
+      "data": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "rows": [
+          {
+            "temp": 27,
+            "country": "Myanmar"
+          },
+          {
+            "temp": 28,
+            "country": "Thailand"
+          },
+          {
+            "temp": 26,
+            "country": "Laos"
+          },
+          {
+            "temp": 28,
+            "country": "Cambodia"
+          },
+          {
+            "temp": 24,
+            "country": "Vietnam"
+          },
+          {
+            "temp": 27,
+            "country": "Malaysia"
+          },
+          {
+            "temp": 27,
+            "country": "Singapore"
+          },
+          {
+            "temp": 26,
+            "country": "Indonesia"
+          },
+          {
+            "temp": 26,
+            "country": "Philippines"
+          },
+          {
+            "temp": 27,
+            "country": "Brunei"
+          }
+        ],
+        "mapZoom": 4,
+        "gradient": [
+          "#3b82f6",
+          "#ef4444"
+        ],
+        "valueKey": "temp",
+        "focusData": true,
+        "projection": "mercator",
+        "locationKey": "country"
+      },
+      "text": "ASEAN Geographic Heatmap",
+      "type": "map",
+      "color": "paper",
+      "width": 560,
+      "height": 380
+    },
+    {
+      "x": -682.0660680936535,
+      "y": -63.94032432495025,
+      "id": "8a47ffa2-dd89-4243-84fb-634ca6470343",
+      "data": {
+        "kind": "chart",
+        "rows": [
+          {
+            "temp": 27,
+            "country": "Myanmar"
+          },
+          {
+            "temp": 28,
+            "country": "Thailand"
+          },
+          {
+            "temp": 26,
+            "country": "Laos"
+          },
+          {
+            "temp": 28,
+            "country": "Cambodia"
+          },
+          {
+            "temp": 24,
+            "country": "Vietnam"
+          },
+          {
+            "temp": 27,
+            "country": "Malaysia"
+          },
+          {
+            "temp": 27,
+            "country": "Singapore"
+          },
+          {
+            "temp": 26,
+            "country": "Indonesia"
+          },
+          {
+            "temp": 26,
+            "country": "Philippines"
+          },
+          {
+            "temp": 27,
+            "country": "Brunei"
+          }
+        ],
+        "xKey": "country",
+        "yKey": "temp",
+        "chartType": "bar"
+      },
+      "text": "ASEAN Temperature Bar Chart",
+      "type": "chart",
+      "color": "paper",
+      "width": 520,
+      "height": 340
+    },
+    {
+      "x": 484.90190392932885,
+      "y": 298.52217934570325,
+      "id": "c8c73b5b-7889-42e3-a52b-06c16963db21",
+      "data": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "rows": [
+          {
+            "temp": 4,
+            "country": "Sweden"
+          },
+          {
+            "temp": 3,
+            "country": "Finland"
+          },
+          {
+            "temp": 3,
+            "country": "Norway"
+          },
+          {
+            "temp": 14,
+            "country": "Spain"
+          },
+          {
+            "temp": 13,
+            "country": "Italy"
+          },
+          {
+            "temp": 11,
+            "country": "France"
+          },
+          {
+            "temp": 9,
+            "country": "Germany"
+          },
+          {
+            "temp": 9,
+            "country": "United Kingdom"
+          },
+          {
+            "temp": 15,
+            "country": "Greece"
+          },
+          {
+            "temp": 8,
+            "country": "Poland"
+          },
+          {
+            "temp": -2,
+            "country": "Russia"
+          }
+        ],
+        "region": "europe",
+        "mapZoom": 4,
+        "gradient": [
+          "#3b82f6",
+          "#ef4444"
+        ],
+        "valueKey": "temp",
+        "focusData": true,
+        "locationKey": "country"
+      },
+      "text": "European Temperatures",
+      "type": "map",
+      "color": "paper",
+      "width": 624.7999267578125,
+      "height": 389.60003662109375
+    },
+    {
+      "x": 473.1339393615723,
+      "y": -134.96600196838378,
+      "id": "12609503-1994-4071-b234-5496032634a6",
+      "data": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "rows": [
+          {
+            "temp": 30,
+            "country": "Burkina Faso"
+          },
+          {
+            "temp": 29,
+            "country": "Mali"
+          },
+          {
+            "temp": 29,
+            "country": "Senegal"
+          },
+          {
+            "temp": 29,
+            "country": "Mauritania"
+          },
+          {
+            "temp": 29,
+            "country": "Djibouti"
+          },
+          {
+            "temp": 28,
+            "country": "Niger"
+          },
+          {
+            "temp": 11,
+            "country": "Lesotho"
+          },
+          {
+            "temp": 17,
+            "country": "Morocco"
+          },
+          {
+            "temp": 18,
+            "country": "South Africa"
+          },
+          {
+            "temp": 19,
+            "country": "Kenya"
+          }
+        ],
+        "region": "africa",
+        "mapZoom": 4,
+        "gradient": [
+          "#3b82f6",
+          "#ef4444"
+        ],
+        "valueKey": "temp",
+        "focusData": true,
+        "locationKey": "country"
+      },
+      "text": "African Temperatures",
+      "type": "map",
+      "color": "paper",
+      "width": 560,
+      "height": 380
+    },
+    {
+      "x": -1049.9931764932767,
+      "y": 486.4342821122634,
+      "id": "1b7a8bda-a390-4a9b-bfb7-2ddc0db563c1",
+      "data": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "rows": [
+          {
+            "temp": 70,
+            "state": "Florida"
+          },
+          {
+            "temp": 65,
+            "state": "Texas"
+          },
+          {
+            "temp": 59,
+            "state": "California"
+          },
+          {
+            "temp": 45,
+            "state": "New York"
+          },
+          {
+            "temp": 26,
+            "state": "Alaska"
+          },
+          {
+            "temp": 70,
+            "state": "Hawaii"
+          },
+          {
+            "temp": 51,
+            "state": "Illinois"
+          },
+          {
+            "temp": 48,
+            "state": "Pennsylvania"
+          },
+          {
+            "temp": 50,
+            "state": "Ohio"
+          },
+          {
+            "temp": 63,
+            "state": "Georgia"
+          },
+          {
+            "temp": 59,
+            "state": "North Carolina"
+          },
+          {
+            "temp": 44,
+            "state": "Michigan"
+          },
+          {
+            "temp": 48,
+            "state": "Washington"
+          },
+          {
+            "temp": 48,
+            "state": "Oregon"
+          },
+          {
+            "temp": 49,
+            "state": "Nevada"
+          },
+          {
+            "temp": 60,
+            "state": "Arizona"
+          },
+          {
+            "temp": 45,
+            "state": "Colorado"
+          }
+        ],
+        "region": "usa",
+        "mapZoom": 4,
+        "valueKey": "temp",
+        "focusData": true,
+        "projection": "albersUsa",
+        "locationKey": "state",
+        "mapTopology": "usStates"
+      },
+      "text": "US States Temperature (┬░F)",
+      "type": "map",
+      "color": "paper",
+      "width": 560,
+      "height": 380
+    },
+    {
+      "x": -136.48004913330072,
+      "y": -56.44002456665036,
+      "id": "7ad77690-7d67-4bb7-91fc-c07fd644a16a",
+      "data": {
+        "lat": 37.7749,
+        "lng": -122.4194,
+        "rows": [
+          {
+            "temp": 14,
+            "country": "China"
+          },
+          {
+            "temp": 16,
+            "country": "Japan"
+          },
+          {
+            "temp": 12,
+            "country": "South Korea"
+          },
+          {
+            "temp": 9,
+            "country": "North Korea"
+          },
+          {
+            "temp": -1,
+            "country": "Mongolia"
+          },
+          {
+            "temp": 22,
+            "country": "Taiwan"
+          }
+        ],
+        "region": "asia",
+        "mapZoom": 4,
+        "valueKey": "temp",
+        "focusData": true,
+        "projection": "equalEarth",
+        "locationKey": "country",
+        "mapTopology": "world"
+      },
+      "text": "East Asia Temperatures",
+      "type": "map",
+      "color": "paper",
+      "width": 560,
+      "height": 380
+    }
+  ],
+  "version": 1
+}
+[2K[1A[2K[G

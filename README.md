@@ -53,7 +53,9 @@ tara login [--url <url>]       # Authenticate with an API key
 ### Projects
 ```bash
 tara projects list             # List all your projects
-tara projects create <name>    # Create a new project
+tara projects list --json      # Stable machine-readable response
+tara projects create <name> --tags maps,climate # Create a tagged project
+tara projects update <project> --tags maps,data # Replace project tags
   -d, --description <desc>
 ```
 
@@ -69,6 +71,25 @@ tara canvas add-node <projectId>     # Add a node to the canvas
   --color <color>                    # paper | sun | mint | sky | coral
 ```
 
+Load project metadata, the current canvas, and the live server node registry in
+one agent-friendly request:
+
+```bash
+tara context <projectId-or-name> --json
+```
+
+Create a reusable WebGL map from uploaded GeoJSON:
+
+```bash
+tara maplibre <projectId> boundaries.geojson
+```
+
+For large map or chart datasets, avoid shell argument limits by streaming JSON:
+
+```bash
+generate-data | tara canvas update-node <projectId> <nodeId> --data-stdin
+```
+
 ## Pipe-friendly usage (for agents)
 
 ```bash
@@ -80,6 +101,10 @@ tara canvas add-node <projectId> --text "Ship v2" --type goal --x 200 --y 300
 ```
 
 ## Config
+
+For non-interactive agent sessions, `TARA_API_KEY` and `TARA_BASE_URL`
+override the saved config. This avoids an interactive login and supports isolated
+development, staging, and production environments.
 
 Config is stored at `~/.tara/config.json`:
 

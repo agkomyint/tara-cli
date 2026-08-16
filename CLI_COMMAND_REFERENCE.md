@@ -23,6 +23,10 @@ tara
 │
 └── canvas                                      # Visual Canvas & Node Control Suite
     ├── get <projectId> [--json] (alias: nodes) # List all nodes on canvas
+    ├── position <projectId> <nodeId> [--json]  # Stable node coordinates and sector
+    ├── distance <projectId> <from> <to>        # Distance and direction between nodes
+    ├── nearby <projectId> --x --y --radius     # Find nodes near a world coordinate
+    ├── area <projectId> --left --top --right --bottom # Find nodes in a world area
     ├── add-node <projectId> -t <text>          # Add single node (note, text, goal, etc.)
     ├── add-batch <projectId> -n <jsonArray>    # Batch create nodes with auto-grid
     ├── update-node <projectId> <nodeId>        # Move, resize, restyle, or edit node
@@ -83,6 +87,13 @@ tara nodes "Neural Architecture"
 
 # Raw JSON output for script automation
 tara canvas get "Neural Architecture" --json
+```
+
+#### `tara canvas position <projectId> <nodeId>` and `tara canvas distance <projectId> <fromNodeId> <toNodeId>`
+Read stable coordinates or measure two nodes in world units. The distance command includes both coordinates, direction, nearest-edge distance, and an advisory layout signal; it does not create an ontology relationship.
+```bash
+tara canvas position "Neural Architecture" node_abc --json
+tara canvas distance "Neural Architecture" node_abc node_xyz --json
 ```
 
 #### `tara canvas add-node <projectId> -t <text>`

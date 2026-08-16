@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
-
-type CanvasDocument = { version: 1; nodes: any[] };
+import type { CanvasResponse } from "../../contracts.js";
 
 type Props = {
   projectId: string;
@@ -18,17 +17,15 @@ function ClearCanvasApp({ projectId }: Props) {
   useEffect(() => {
     async function run() {
       try {
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
+        const current = await apiRequest<CanvasResponse>(
           `/api/studio/projects/${projectId}/canvas`,
         );
 
-        const resolvedProjectId = current.projectId || projectId;
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/transactions`, {
+          method: "POST",
           body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: { version: 1, nodes: [] },
+            baseRevision: current.revision,
+            operations: [{ op: "replace", nodes: [] }],
             camera: { x: 160, y: 120, zoom: 1 },
           }),
         });

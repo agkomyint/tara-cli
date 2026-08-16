@@ -15,6 +15,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
+    "@tara/canvas-core": "file:../tara-canvas/tara-canvas-core-0.1.1.tgz",
     "@clack/prompts": "^1.7.0",
     "commander": "^12.1.0",
     "ink": "^5.0.1",

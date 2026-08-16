@@ -8,6 +8,7 @@ type Project = {
   description: string;
   archived: boolean;
   pinned: boolean;
+  tags: string[];
   createdAt: string;
   updatedAt: string;
 };
@@ -28,7 +29,9 @@ function ProjectsListApp() {
   }, []);
 
   if (state.status === "loading") return <Text color="yellow">Loading projects...</Text>;
-  if (state.status === "error") return <Text color="red">× {state.message}</Text>;
+  if (state.status === "error") {
+    return <Text color="red">× {state.message}</Text>;
+  }
 
   const { projects } = state;
 
@@ -46,6 +49,7 @@ function ProjectsListApp() {
         <Box key={p.id} gap={3}>
           <Text>{p.pinned ? "★ " : "  "}{p.name.padEnd(32).slice(0, 32)}</Text>
           <Text dimColor>{p.id}</Text>
+          {p.tags.length ? <Text color="cyan">[{p.tags.join(", ")}]</Text> : null}
         </Box>
       ))}
       <Text dimColor>\n{projects.length} project{projects.length !== 1 ? "s" : ""}</Text>
@@ -53,7 +57,20 @@ function ProjectsListApp() {
   );
 }
 
-export async function runProjectsList() {
+export async function runProjectsList(options: { json?: boolean } = {}) {
+  if (options.json) {
+    try {
+      const data = await apiRequest<{ projects: Project[] }>("/api/studio/projects");
+      process.stdout.write(JSON.stringify({ ok: true, data, warnings: [] }, null, 2) + "\n");
+    } catch (error) {
+      const message = error instanceof TaraAPIError ? error.message : String(error);
+      process.stdout.write(
+        JSON.stringify({ ok: false, error: { code: "REQUEST_FAILED", message }, warnings: [] }, null, 2) + "\n",
+      );
+    }
+    return;
+  }
+
   const { waitUntilExit } = render(<ProjectsListApp />);
   await waitUntilExit();
 }

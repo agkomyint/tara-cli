@@ -25,9 +25,9 @@ export function writeConfig(config: TaraConfig): void {
 }
 
 export function getBaseUrl(): string {
-  return readConfig().baseUrl ?? "http://localhost:3000";
+  return process.env.TARA_BASE_URL ?? readConfig().baseUrl ?? "http://localhost:3000";
 }
 
 export function getApiKey(): string | undefined {
-  return readConfig().apiKey;
+  return process.env.TARA_API_KEY ?? readConfig().apiKey;
 }

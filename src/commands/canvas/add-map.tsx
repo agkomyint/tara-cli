@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
-import { calculateNextPosition } from "./utils.js";
 
 type Props = {
   projectId: string;
@@ -16,21 +15,8 @@ type Props = {
   valueKey?: string;
   gradient?: string;
   region?: string;
+  mapTopology?: string;
 };
-
-type CanvasNode = {
-  id: string;
-  type: "map";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text: string;
-  color: "paper" | "sun" | "mint" | "sky" | "coral";
-  data: Record<string, unknown>;
-};
-
-type CanvasDocument = { version: 1; nodes: any[] };
 
 function AddMapApp({
   projectId,
@@ -45,6 +31,7 @@ function AddMapApp({
   valueKey,
   gradient,
   region,
+  mapTopology,
 }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
@@ -55,24 +42,13 @@ function AddMapApp({
   useEffect(() => {
     async function run() {
       try {
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
-        const resolvedProjectId = current.projectId || projectId;
-        const pos = calculateNextPosition(current.document.nodes, x, y);
-
-        // 2. Create map node
         const newNodeId = crypto.randomUUID();
-        const newNode: CanvasNode = {
+        const newNode = {
           id: newNodeId,
           type: "map",
           text: title,
-          x: pos.x,
-          y: pos.y,
-          width: 560,
-          height: 380,
-          color: "paper",
+          ...(x !== undefined ? { x } : {}),
+          ...(y !== undefined ? { y } : {}),
           data: {
             lat,
             lng,
@@ -82,21 +58,13 @@ function AddMapApp({
             ...(valueKey ? { valueKey } : {}),
             ...(gradient && gradient.includes(",") ? { gradient: gradient.split(",").map((c) => c.trim()) } : {}),
             ...(region ? { region } : {}),
+            ...(mapTopology ? { mapTopology, projection: mapTopology === "usStates" ? "albersUsa" : "equalEarth" } : {}),
           },
         };
 
-        const updated: CanvasDocument = {
-          version: 1,
-          nodes: [...current.document.nodes, newNode],
-        };
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: updated,
-            camera: current.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes`, {
+          method: "POST",
+          body: JSON.stringify({ node: newNode, idempotencyKey: newNodeId }),
         });
 
         setState({ status: "done", nodeId: newNodeId });
@@ -108,7 +76,7 @@ function AddMapApp({
       }
     }
     void run();
-  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey, gradient, region]);
+  }, [projectId, title, lat, lng, zoom, x, y, dataJson, locationKey, valueKey, gradient, region, mapTopology]);
 
   if (state.status === "loading") return <Text color="yellow">Adding map &quot;{title}&quot; to canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
@@ -135,6 +103,7 @@ export async function runAddMap(
     valueKey?: string;
     gradient?: string;
     region?: string;
+    topology?: string;
   },
 ) {
   const { waitUntilExit } = render(
@@ -151,6 +120,7 @@ export async function runAddMap(
       valueKey={options.valueKey}
       gradient={options.gradient}
       region={options.region}
+      mapTopology={options.topology}
     />,
   );
   await waitUntilExit();

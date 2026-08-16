@@ -1,54 +1,15 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { render, Text, Box } from "ink";
-import { apiRequest, TaraAPIError } from "../../client.js";
 
-type CanvasNode = {
-  id: string;
-  type: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text: string;
-  color: string;
-};
+import { apiRequest } from "../../client.js";
+import type { CanvasResponse } from "../../contracts.js";
 
-type CanvasDocument = {
-  version: 1;
-  nodes: CanvasNode[];
-};
-
-type Props = { projectId: string; json?: boolean };
-
-function CanvasGetApp({ projectId, json }: Props) {
-  const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "done"; document: CanvasDocument }
-    | { status: "error"; message: string }
-  >({ status: "loading" });
-
-  useEffect(() => {
-    apiRequest<{ document: CanvasDocument; camera: unknown }>(`/api/studio/projects/${projectId}/canvas`)
-      .then((data) => setState({ status: "done", document: data.document }))
-      .catch((err) =>
-        setState({ status: "error", message: err instanceof TaraAPIError ? err.message : String(err) }),
-      );
-  }, [projectId]);
-
-  if (state.status === "loading") return <Text color="yellow">Loading canvas...</Text>;
-  if (state.status === "error") return <Text color="red">× {state.message}</Text>;
-
-  const { document: doc } = state;
-
-  if (json) {
-    process.stdout.write(JSON.stringify(doc, null, 2) + "\n");
-    return null;
-  }
-
+function CanvasView({ data }: { data: CanvasResponse }) {
   return (
     <Box flexDirection="column" gap={1}>
-      <Text bold color="cyan">□ Canvas — {doc.nodes.length} node{doc.nodes.length !== 1 ? "s" : ""}</Text>
-      {doc.nodes.map((node) => (
+      <Text bold color="cyan">□ Canvas — {data.document.nodes.length} node{data.document.nodes.length !== 1 ? "s" : ""}</Text>
+      <Text dimColor>Revision: {data.revision ?? "new canvas"}</Text>
+      {data.document.nodes.map((node) => (
         <Box key={node.id} flexDirection="column">
           <Box gap={2}>
             <Text color="cyan">[{node.type}]</Text>
@@ -62,6 +23,11 @@ function CanvasGetApp({ projectId, json }: Props) {
 }
 
 export async function runCanvasGet(projectId: string, options: { json?: boolean }) {
-  const { waitUntilExit } = render(<CanvasGetApp projectId={projectId} json={options.json} />);
+  const data = await apiRequest<CanvasResponse>(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas`);
+  if (options.json) {
+    process.stdout.write(`${JSON.stringify(data, null, 2)}\n`);
+    return;
+  }
+  const { waitUntilExit } = render(<CanvasView data={data} />);
   await waitUntilExit();
 }

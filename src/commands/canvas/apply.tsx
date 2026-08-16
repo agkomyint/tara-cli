@@ -1,96 +1,42 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { render, Text, Box } from "ink";
-import { readFileSync, existsSync } from "fs";
-import { apiRequest, TaraAPIError } from "../../client.js";
 
-type Props = {
-  projectId: string;
-  fileOrSpec: string;
-};
+import { apiRequest } from "../../client.js";
+import type { CanvasResponse } from "../../contracts.js";
+import { readCanvasSpec } from "./spec.js";
 
-type CanvasDocument = { version: 1; nodes: any[] };
+type TransactionResponse = CanvasResponse & { persisted: boolean; results: Array<{ op: string; nodeId: string }> };
 
-function ApplySpecApp({ projectId, fileOrSpec }: Props) {
-  const [state, setState] = useState<
-    | { status: "loading"; message: string }
-    | { status: "done"; count: number }
-    | { status: "error"; message: string }
-  >({ status: "loading", message: "Parsing canvas spec..." });
-
-  useEffect(() => {
-    async function run() {
-      try {
-        let specJson = fileOrSpec;
-        if (existsSync(fileOrSpec)) {
-          specJson = readFileSync(fileOrSpec, "utf-8");
-        }
-
-        let parsed: { version?: number; document?: CanvasDocument; nodes?: any[]; camera?: any };
-        try {
-          parsed = JSON.parse(specJson);
-        } catch {
-          throw new Error("Invalid JSON spec provided. Pass a JSON string or path to a .json file.");
-        }
-
-        const nodes = parsed.document?.nodes ?? (Array.isArray(parsed.nodes) ? parsed.nodes : null);
-        if (!nodes) {
-          throw new Error('Canvas spec must contain a "nodes" array or "document" object.');
-        }
-
-        setState({ status: "loading", message: "Applying spec to canvas..." });
-
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
-        const resolvedProjectId = current.projectId || projectId;
-
-        const updatedDoc = {
-          version: 1 as const,
-          nodes: nodes.map((n: any) => ({
-            id: n.id || crypto.randomUUID(),
-            type: n.type || "note",
-            text: n.text || "",
-            x: n.x ?? 100,
-            y: n.y ?? 100,
-            width: n.width ?? 280,
-            height: n.height ?? 180,
-            color: n.color || "paper",
-            ...n,
-          })),
-        };
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: updatedDoc,
-            camera: parsed.camera ?? current.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
-        });
-
-        setState({ status: "done", count: updatedDoc.nodes.length });
-      } catch (err) {
-        setState({
-          status: "error",
-          message: err instanceof TaraAPIError ? err.message : String(err),
-        });
-      }
-    }
-    void run();
-  }, [projectId, fileOrSpec]);
-
-  if (state.status === "loading") return <Text color="yellow">{state.message}</Text>;
-  if (state.status === "error") return <Text color="red">× {state.message}</Text>;
-
-  return (
-    <Box flexDirection="column" gap={1}>
-      <Text color="green">✓ Applied canvas spec ({state.count} nodes)!</Text>
-    </Box>
-  );
+export async function applyCanvasSpec(projectId: string, fileOrSpec: string, dryRun: boolean) {
+  const spec = readCanvasSpec(fileOrSpec);
+  const current = await apiRequest<CanvasResponse>(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas`);
+  return apiRequest<TransactionResponse>(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/transactions`, {
+    method: "POST",
+    body: JSON.stringify({
+      baseRevision: current.revision,
+      operations: [{ op: "replace", nodes: spec.nodes }],
+      camera: spec.camera,
+      dryRun,
+    }),
+  });
 }
 
-export async function runCanvasApply(projectId: string, fileOrSpec: string) {
-  const { waitUntilExit } = render(<ApplySpecApp projectId={projectId} fileOrSpec={fileOrSpec} />);
+export async function runCanvasApply(projectId: string, fileOrSpec: string, options: { dryRun?: boolean; json?: boolean } = {}) {
+  const result = await applyCanvasSpec(projectId, fileOrSpec, options.dryRun ?? false);
+  if (options.json) {
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    return;
+  }
+  if (!process.stdout.isTTY) {
+    process.stdout.write(`✓ ${options.dryRun ? "Validated canvas spec" : "Applied canvas spec"} (${result.document.nodes.length} nodes)\n`);
+    process.stdout.write(`${options.dryRun ? "Dry run: no changes saved." : `Revision: ${result.revision}`}\n`);
+    return;
+  }
+  const { waitUntilExit } = render(
+    <Box flexDirection="column" gap={1}>
+      <Text color="green">✓ {options.dryRun ? "Validated canvas spec" : "Applied canvas spec"} ({result.document.nodes.length} nodes)</Text>
+      <Text dimColor>{options.dryRun ? "Dry run: no changes saved." : `Revision: ${result.revision}`}</Text>
+    </Box>,
+  );
   await waitUntilExit();
 }

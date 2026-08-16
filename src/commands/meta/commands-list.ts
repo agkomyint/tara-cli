@@ -27,7 +27,12 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
         name: "create",
         syntax: "tara projects create <name> | tara create <name>",
         description: "Create a new studio project",
-        options: [{ flag: "-d, --description <desc>", description: "Optional project description" }],
+        options: [{ flag: "-d, --description <desc>", description: "Optional project description" }, { flag: "--tags <tag1,tag2>", description: "Comma-separated discovery tags" }],
+      },
+      {
+        name: "update",
+        syntax: "tara projects update <projectId> [--name] [--description] [--tags <tag1,tag2>] [--json]",
+        description: "Update project metadata and replace discovery tags",
       },
       {
         name: "share",
@@ -50,7 +55,7 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
       {
         name: "node-types",
         syntax: "tara node-types | tara types | tara canvas node-types",
-        description: "List all 13 supported canvas node types, default dimensions, capabilities, and color presets",
+        description: "Discover supported canvas node types, defaults, renderer status, capabilities, and colors from the live Tara API",
         options: [{ flag: "--json", description: "Output machine-readable JSON array of node types" }],
       },
       {
@@ -58,6 +63,31 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
         syntax: "tara canvas get <projectId> | tara nodes <projectId>",
         description: "List all nodes on the project canvas with position, size, type, and text",
         options: [{ flag: "--json", description: "Output raw JSON representation of canvas document" }],
+      },
+      {
+        name: "get-node",
+        syntax: "tara canvas get-node <projectId> <nodeId> [--json]",
+        description: "Get one node by full ID or unambiguous ID prefix",
+      },
+      {
+        name: "position",
+        syntax: "tara canvas position <projectId> <nodeId> [--json]",
+        description: "Get stable world coordinates, center, dimensions, and sector for one node",
+      },
+      {
+        name: "distance",
+        syntax: "tara canvas distance <projectId> <fromNodeId> <toNodeId> [--json]",
+        description: "Measure node-to-node distance, direction, and an advisory layout signal",
+      },
+      {
+        name: "nearby",
+        syntax: "tara canvas nearby <projectId> --x <x> --y <y> --radius <worldUnits> [--json]",
+        description: "Find nodes near a world coordinate, ordered by distance",
+      },
+      {
+        name: "area",
+        syntax: "tara canvas area <projectId> --left <x> --top <y> --right <x> --bottom <y> [--json]",
+        description: "Find nodes intersecting a world-coordinate rectangle",
       },
       {
         name: "add-node",
@@ -99,12 +129,52 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
           { flag: "--width <w>", description: "New width in pixels" },
           { flag: "--height <h>", description: "New height in pixels" },
           { flag: "--color <color>", description: "New color preset" },
+          { flag: "--entity-type <type>", description: "Update an ontology entity category" },
+          { flag: "--attributes <json>", description: "Replace ontology attributes with a JSON object" },
+          { flag: "--external-id <id>", description: "Update an entity external ID" },
+          { flag: "--status <status>", description: "Update entity or goal status" },
+          { flag: "--remove-data <keys...>", description: "Remove top-level node data fields" },
+          { flag: "--json", description: "Output the updated node as JSON" },
         ],
+      },
+      {
+        name: "add-entity",
+        syntax: "tara canvas add-entity <projectId> <name> --entity-type <type>",
+        description: "Create a typed ontology entity with stable ID and structured attributes",
+        options: [
+          { flag: "--attributes <json>", description: "Entity attributes JSON" },
+          { flag: "--id <id>", description: "Stable canvas node ID" },
+          { flag: "--json", description: "Output the created node as JSON" },
+        ],
+      },
+      {
+        name: "connect",
+        syntax: "tara canvas connect <projectId> <sourceNodeId> <targetNodeId> --relationship <type>",
+        description: "Create a typed directional relationship between two entities",
+      },
+      {
+        name: "relationships",
+        syntax: "tara canvas relationships <projectId> [--json]",
+        description: "List relationship endpoints, predicates, attributes, and visual styles",
+      },
+      {
+        name: "update-relationship",
+        syntax: "tara canvas update-relationship <projectId> <relationshipId> [options]",
+        description: "Update one relationship predicate, endpoints, attributes, routing, or style",
+      },
+      {
+        name: "layout-ontology",
+        syntax: "tara canvas layout-ontology <projectId> [--direction left-right|top-down]",
+        description: "Arrange a directed ontology into stable hierarchy ranks",
       },
       {
         name: "remove-node",
         syntax: "tara canvas remove-node <projectId> <nodeId>",
-        description: "Delete a node from the canvas",
+        description: "Delete a node and, by default, its connected relationships",
+        options: [
+          { flag: "--keep-relationships", description: "Leave connected relationship nodes in place" },
+          { flag: "--json", description: "Output all removed node IDs" },
+        ],
       },
       {
         name: "upload",
@@ -141,6 +211,21 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
         name: "apply",
         syntax: "tara apply <projectId> <specOrFile>",
         description: "Declaratively replace canvas state from a spec file or JSON string",
+      },
+      {
+        name: "validate",
+        syntax: "tara canvas validate <specOrFile> [--json]",
+        description: "Validate a canvas spec against the live server contract",
+      },
+      {
+        name: "diff",
+        syntax: "tara canvas diff <projectId> <specOrFile> [--json]",
+        description: "Preview node-level changes before replacing a canvas",
+      },
+      {
+        name: "watch",
+        syntax: "tara canvas watch <projectId> [--json]",
+        description: "Stream canvas revision changes for automation and collaboration",
       },
       {
         name: "clear",

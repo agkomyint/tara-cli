@@ -36,34 +36,17 @@ function InitDemoApp({ name }: Props) {
         const projectId = projectRes.project.id;
         setState({ status: "loading", message: "Adding Hello World note to canvas..." });
 
-        // 2. Fetch empty canvas or init
-        const canvasRes = await apiRequest<{ document: { version: 1; nodes: any[] }; camera: any }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
         const helloNode = {
           id: crypto.randomUUID(),
           type: "note",
           text: "👋 Hello World from Tara CLI!",
           x: 160,
           y: 120,
-          width: 320,
-          height: 180,
           color: "sun",
         };
-
-        const updatedDoc = {
-          version: 1 as const,
-          nodes: [...(canvasRes.document?.nodes ?? []), helloNode],
-        };
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId,
-            document: updatedDoc,
-            camera: canvasRes.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes`, {
+          method: "POST",
+          body: JSON.stringify({ node: helloNode, idempotencyKey: helloNode.id }),
         });
 
         setState({ status: "done", projectId, name: projectName });

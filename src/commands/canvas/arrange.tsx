@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
+import type { CanvasResponse } from "../../contracts.js";
 
 type CanvasNode = {
   id: string;
@@ -12,8 +13,6 @@ type CanvasNode = {
   text: string;
   [key: string]: unknown;
 };
-
-type CanvasDocument = { version: 1; nodes: CanvasNode[] };
 
 type Props = {
   projectId: string;
@@ -32,11 +31,10 @@ function ArrangeApp({ projectId, columns = 3, gapX = 40, gapY = 40 }: Props) {
   useEffect(() => {
     async function run() {
       try {
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
+        const current = await apiRequest<CanvasResponse>(
           `/api/studio/projects/${projectId}/canvas`,
         );
 
-        const resolvedProjectId = current.projectId || projectId;
         const nodes = current.document.nodes;
 
         if (nodes.length === 0) {
@@ -48,7 +46,7 @@ function ArrangeApp({ projectId, columns = 3, gapX = 40, gapY = 40 }: Props) {
         let currY = 100;
         let maxHeightInRow = 0;
 
-        const arrangedNodes = nodes.map((node, idx) => {
+        const operations = nodes.map((node, idx) => {
           const col = idx % columns;
           if (col === 0 && idx > 0) {
             currX = 100;
@@ -56,24 +54,19 @@ function ArrangeApp({ projectId, columns = 3, gapX = 40, gapY = 40 }: Props) {
             maxHeightInRow = 0;
           }
 
-          const arranged = {
-            ...node,
-            x: currX,
-            y: currY,
-          };
+          const updates = { x: currX, y: currY };
 
           currX += node.width + gapX;
           if (node.height > maxHeightInRow) maxHeightInRow = node.height;
 
-          return arranged;
+          return { op: "update", nodeId: node.id, updates };
         });
 
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/transactions`, {
+          method: "POST",
           body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: { version: 1, nodes: arrangedNodes },
-            camera: current.camera ?? { x: 160, y: 120, zoom: 1 },
+            baseRevision: current.revision,
+            operations,
           }),
         });
 

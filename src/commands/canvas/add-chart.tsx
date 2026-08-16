@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 import { apiRequest, TaraAPIError } from "../../client.js";
-import { calculateNextPosition } from "./utils.js";
 
 type ChartType = "bar" | "line" | "area" | "scatter" | "pie";
 
@@ -15,20 +14,6 @@ type Props = {
   xKey?: string;
   yKey?: string;
 };
-
-type CanvasNode = {
-  id: string;
-  type: "chart";
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  text: string;
-  color: "paper" | "sun" | "mint" | "sky" | "coral";
-  data: Record<string, unknown>;
-};
-
-type CanvasDocument = { version: 1; nodes: any[] };
 
 function AddChartApp({ projectId, chartType, title, dataJson, x, y, xKey, yKey }: Props) {
   const [state, setState] = useState<
@@ -47,46 +32,26 @@ function AddChartApp({ projectId, chartType, title, dataJson, x, y, xKey, yKey }
           throw new Error('Invalid JSON provided for --data parameter.');
         }
 
-        // 1. Fetch current canvas
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
-        const resolvedProjectId = current.projectId || projectId;
-        const pos = calculateNextPosition(current.document.nodes, x, y);
-
-        // 2. Create chart node
         const newNodeId = crypto.randomUUID();
-        const newNode: CanvasNode = {
+        const firstRow = Array.isArray(parsedData) && parsedData[0] && typeof parsedData[0] === "object" && !Array.isArray(parsedData[0]) ? parsedData[0] as Record<string, unknown> : null;
+        const columns = firstRow ? Object.keys(firstRow) : [];
+        const newNode = {
           id: newNodeId,
           type: "chart",
           text: title,
-          x: pos.x,
-          y: pos.y,
-          width: 520,
-          height: 340,
-          color: "paper",
+          ...(x !== undefined ? { x } : {}),
+          ...(y !== undefined ? { y } : {}),
           data: {
             kind: "chart",
             chartType,
             rows: parsedData,
-            xKey: xKey || (Array.isArray(parsedData) && parsedData.length ? Object.keys(parsedData[0])[0] : "x"),
-            yKey: yKey || (Array.isArray(parsedData) && parsedData.length ? Object.keys(parsedData[0])[1] : "y"),
+            xKey: xKey || columns[0] || "x",
+            yKey: yKey || columns[1] || "y",
           },
         };
-
-        const updated: CanvasDocument = {
-          version: 1,
-          nodes: [...current.document.nodes, newNode],
-        };
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: updated,
-            camera: current.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
+        await apiRequest(`/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes`, {
+          method: "POST",
+          body: JSON.stringify({ node: newNode, idempotencyKey: newNodeId }),
         });
 
         setState({ status: "done", nodeId: newNodeId });

@@ -1,70 +1,31 @@
 import React, { useEffect, useState } from "react";
-import { render, Text, Box } from "ink";
+import { render, Text } from "ink";
+
 import { apiRequest, TaraAPIError } from "../../client.js";
 
-type CanvasNode = { id: string; [key: string]: unknown };
-type CanvasDocument = { version: 1; nodes: CanvasNode[] };
-
-type Props = {
-  projectId: string;
-  nodeId: string;
-};
-
-function RemoveNodeApp({ projectId, nodeId }: Props) {
+function RemoveNodeApp({ projectId, nodeId, cascadeRelationships, json }: { projectId: string; nodeId: string; cascadeRelationships: boolean; json: boolean }) {
   const [state, setState] = useState<
     | { status: "loading" }
-    | { status: "done"; removedId: string }
+    | { status: "done"; removedNodeId: string; removedNodeIds: string[] }
     | { status: "error"; message: string }
   >({ status: "loading" });
 
   useEffect(() => {
-    async function run() {
-      try {
-        const current = await apiRequest<{ projectId: string; document: CanvasDocument; camera: unknown }>(
-          `/api/studio/projects/${projectId}/canvas`,
-        );
-
-        const resolvedProjectId = current.projectId || projectId;
-        const initialCount = current.document.nodes.length;
-        const filteredNodes = current.document.nodes.filter(
-          (node) => node.id !== nodeId && !node.id.startsWith(nodeId),
-        );
-
-        if (filteredNodes.length === initialCount) {
-          throw new Error(`Node matching ID "${nodeId}" not found on canvas.`);
-        }
-
-        await apiRequest("/api/studio/projects/canvas", {
-          method: "PUT",
-          body: JSON.stringify({
-            projectId: resolvedProjectId,
-            document: { version: 1, nodes: filteredNodes },
-            camera: current.camera ?? { x: 160, y: 120, zoom: 1 },
-          }),
-        });
-
-        setState({ status: "done", removedId: nodeId });
-      } catch (err) {
-        setState({
-          status: "error",
-          message: err instanceof TaraAPIError ? err.message : String(err),
-        });
-      }
-    }
-    void run();
-  }, [projectId, nodeId]);
+    apiRequest<{ removedNodeId: string; removedNodeIds: string[] }>(
+      `/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes/${encodeURIComponent(nodeId)}`,
+      { method: "DELETE", body: JSON.stringify({ cascadeRelationships }) },
+    ).then((result) => setState({ status: "done", removedNodeId: result.removedNodeId, removedNodeIds: result.removedNodeIds }))
+      .catch((error) => setState({ status: "error", message: error instanceof TaraAPIError ? error.message : String(error) }));
+  }, [cascadeRelationships, nodeId, projectId]);
 
   if (state.status === "loading") return <Text color="yellow">Removing node from canvas...</Text>;
   if (state.status === "error") return <Text color="red">× {state.message}</Text>;
-
-  return (
-    <Box flexDirection="column">
-      <Text color="green">✓ Node {state.removedId} removed from canvas.</Text>
-    </Box>
-  );
+  if (json) return <Text>{JSON.stringify({ removedNodeId: state.removedNodeId, removedNodeIds: state.removedNodeIds })}</Text>;
+  const relatedCount = Math.max(0, state.removedNodeIds.length - 1);
+  return <Text color="green">✓ Node {state.removedNodeId} removed{relatedCount ? ` with ${relatedCount} connected relationship${relatedCount === 1 ? "" : "s"}` : ""}.</Text>;
 }
 
-export async function runCanvasRemoveNode(projectId: string, nodeId: string) {
-  const { waitUntilExit } = render(<RemoveNodeApp projectId={projectId} nodeId={nodeId} />);
+export async function runCanvasRemoveNode(projectId: string, nodeId: string, options: { keepRelationships?: boolean; json?: boolean } = {}) {
+  const { waitUntilExit } = render(<RemoveNodeApp projectId={projectId} nodeId={nodeId} cascadeRelationships={!options.keepRelationships} json={options.json ?? false} />);
   await waitUntilExit();
 }
