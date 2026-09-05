@@ -1,32 +1,6 @@
-import React, { useEffect, useState } from "react";
 import { readFileSync } from "fs";
-import { render, Text, Box } from "ink";
-
-import { apiRequest, TaraAPIError } from "../../client.js";
+import { apiRequest } from "../../client.js";
 import type { CanvasNode } from "../../contracts.js";
-
-type Props = { projectId: string; nodeId: string; updates: Record<string, unknown>; dataPatch: Record<string, unknown>; dataRemove: string[]; json: boolean };
-
-function UpdateNodeApp({ projectId, nodeId, updates, dataPatch, dataRemove, json }: Props) {
-  const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "done"; node: CanvasNode }
-    | { status: "error"; message: string }
-  >({ status: "loading" });
-
-  useEffect(() => {
-    apiRequest<{ node: CanvasNode }>(
-      `/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes/${encodeURIComponent(nodeId)}`,
-      { method: "PATCH", body: JSON.stringify({ updates, dataPatch: Object.keys(dataPatch).length ? dataPatch : undefined, dataRemove: dataRemove.length ? dataRemove : undefined }) },
-    ).then((result) => setState({ status: "done", node: result.node }))
-      .catch((error) => setState({ status: "error", message: error instanceof TaraAPIError ? error.message : String(error) }));
-  }, [dataPatch, nodeId, projectId, updates]);
-
-  if (state.status === "loading") return <Text color="yellow">Updating node on canvas...</Text>;
-  if (state.status === "error") return <Text color="red">× {state.message}</Text>;
-  if (json) return <Text>{JSON.stringify({ node: state.node })}</Text>;
-  return <Box flexDirection="column" gap={1}><Text color="green">✓ Node {state.node.id} updated!</Text><Text dimColor>Position: ({state.node.x}, {state.node.y}) Size: {state.node.width}×{state.node.height}</Text></Box>;
-}
 
 export async function runCanvasUpdateNode(
   projectId: string,
@@ -57,6 +31,10 @@ export async function runCanvasUpdateNode(
     ...(options.status ? { status: options.status } : {}),
     ...(dataJson ? { rows: JSON.parse(dataJson) as unknown } : {}),
   };
-  const { waitUntilExit } = render(<UpdateNodeApp projectId={projectId} nodeId={nodeId} updates={updates} dataPatch={dataPatch} dataRemove={options.removeData ?? []} json={options.json ?? false} />);
-  await waitUntilExit();
+  const result = await apiRequest<{ node: CanvasNode }>(
+    `/api/studio/projects/${encodeURIComponent(projectId)}/canvas/nodes/${encodeURIComponent(nodeId)}`,
+    { method: "PATCH", body: JSON.stringify({ updates, dataPatch: Object.keys(dataPatch).length ? dataPatch : undefined, dataRemove: options.removeData?.length ? options.removeData : undefined }) },
+  );
+  if (options.json) process.stdout.write(JSON.stringify(result) + "\n");
+  else process.stdout.write(`Updated node ${result.node.id} at (${result.node.x}, ${result.node.y})\n`);
 }

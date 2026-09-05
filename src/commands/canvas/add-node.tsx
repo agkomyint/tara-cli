@@ -33,12 +33,13 @@ function AddNodeApp({ projectId, node, idempotencyKey }: Props) {
 
 export async function runCanvasAddNode(
   projectId: string,
-  options: { type?: string; text: string; x?: number; y?: number; color?: string; sourceUrl?: string; data?: string; dataFile?: string; dataStdin?: boolean; idempotencyKey?: string },
+  options: { type?: string; text: string; layer?: string; x?: number; y?: number; color?: string; sourceUrl?: string; data?: string; dataFile?: string; dataStdin?: boolean; idempotencyKey?: string },
 ) {
   const dataJson = options.dataStdin ? readFileSync(0, "utf8") : options.dataFile ? readFileSync(options.dataFile, "utf8") : options.data;
   const node = {
     type: options.type ?? "note",
     text: options.text,
+    ...(options.layer ? { layerId: options.layer } : {}),
     ...(options.x !== undefined ? { x: options.x } : {}),
     ...(options.y !== undefined ? { y: options.y } : {}),
     ...(options.color ? { color: options.color } : {}),

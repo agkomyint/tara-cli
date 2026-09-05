@@ -1,5 +1,7 @@
 # Tara CLI
 
+**Agents:** Start with `tara agent`, use `tara commands --json` for live command discovery, and read [the agent workflow](AGENT_GUIDE.md). Bind an existing project with `tara use <project>` and prepare changes locally with `tara draft init @current task.json` before explicit commit.
+
 Terminal interface for [Tara Workspace](https://taraspace.space) — control your canvas and projects from the terminal or use it in agent scripts.
 
 ## Installation

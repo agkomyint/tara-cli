@@ -1,4 +1,5 @@
 import { getApiKey, getBaseUrl } from "./config.js";
+import { readTarget, resolveProjectPath } from "./project-target.js";
 
 export class TaraAPIError extends Error {
   constructor(
@@ -33,10 +34,16 @@ export async function apiRequest<T = unknown>(
   const apiKey = getApiKey();
   const baseUrl = getBaseUrl();
 
+  if (typeof options.body === "string") {
+    const body = JSON.parse(options.body) as Record<string, unknown>;
+    if (body && body.projectId === "@current") options = { ...options, body: JSON.stringify({ ...body, projectId: readTarget().projectId }) };
+  }
+
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}${path}`, {
+    res = await fetch(`${baseUrl}${resolveProjectPath(path)}`, {
       ...options,
+      signal: options.signal ?? AbortSignal.timeout(30_000),
       headers: {
         "Content-Type": "application/json",
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
@@ -74,11 +81,13 @@ export async function apiUpload<T = unknown>(
 ): Promise<T> {
   const apiKey = getApiKey();
   const baseUrl = getBaseUrl();
+  if (formData.get("projectId") === "@current") formData.set("projectId", readTarget().projectId);
 
   let res: Response;
   try {
-    res = await fetch(`${baseUrl}${path}`, {
+    res = await fetch(`${baseUrl}${resolveProjectPath(path)}`, {
       method: "POST",
+      signal: AbortSignal.timeout(120_000),
       headers: {
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },

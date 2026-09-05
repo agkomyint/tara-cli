@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { render, Text, Box } from "ink";
 
 import { apiRequest, TaraAPIError } from "../../client.js";
+import { assertUniqueExplicitNodeIds } from "./spec.js";
 
 type NodeIntent = { id?: string; type?: string; [key: string]: unknown };
 type Props = { projectId: string; nodes: NodeIntent[]; layout: "grid" | "flow" | "none"; startX: number; startY: number };
@@ -34,6 +35,7 @@ export async function runCanvasAddBatch(projectId: string, options: { nodes: str
     if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Each node must be a JSON object.");
     return value as NodeIntent;
   });
+  assertUniqueExplicitNodeIds(nodes);
   const layout = options.layout === "flow" || options.layout === "none" ? options.layout : "grid";
   const { waitUntilExit } = render(<AddBatchApp projectId={projectId} nodes={nodes} layout={layout} startX={options.x ?? 100} startY={options.y ?? 100} />);
   await waitUntilExit();

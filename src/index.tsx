@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { registerAgentWorkflow, commandManifest } from "./agent-workflow.js";
 import { runLogin } from "./commands/auth/login.js";
 import { runProjectsList } from "./commands/projects/list.js";
 import { runProjectsCreate } from "./commands/projects/create.js";
@@ -18,7 +19,6 @@ import { runCanvasUpdateNode } from "./commands/canvas/update-node.js";
 import { runCanvasRemoveNode } from "./commands/canvas/remove-node.js";
 import { runCanvasClear } from "./commands/canvas/clear.js";
 import { runCanvasApply } from "./commands/canvas/apply.js";
-import { runCommandsList } from "./commands/meta/commands-list.js";
 import { runNodeTypes } from "./commands/canvas/node-types.js";
 import { runContext } from "./commands/meta/context.js";
 import { runCanvasValidate } from "./commands/canvas/validate.js";
@@ -30,6 +30,10 @@ import { runCanvasRelationships, runCanvasUpdateRelationship } from "./commands/
 import { runCanvasLayoutOntology } from "./commands/canvas/layout-ontology.js";
 import { runLiveAdd, runLiveRefresh } from "./commands/canvas/live.js";
 import { runCanvasArea, runCanvasDistance, runCanvasNearby, runCanvasPosition } from "./commands/canvas/spatial.js";
+import { runCanvasTimelineDemo } from "./commands/canvas/timeline-demo.js";
+import { runCanvasSetTime, runCanvasTime } from "./commands/canvas/temporal.js";
+import { runCanvasAddLayer, runCanvasLayers } from "./commands/canvas/layers.js";
+import { runCanvasCheck } from "./commands/canvas/check.js";
 import { markCommandFailure, TaraAPIError } from "./client.js";
 
 for (const stream of [process.stdout, process.stderr]) {
@@ -67,7 +71,17 @@ program
   .description("List all available CLI commands in a structured root & 2nd-level hierarchy")
   .option("--json", "Output structured JSON command registry")
   .action((opts: { json?: boolean }) => {
-    runCommandsList(opts);
+    if (opts.json) process.stdout.write(JSON.stringify(commandManifest(program), null, 2) + "\n");
+    else {
+      const printCommands = (parent: Command, prefix: string) => {
+        for (const command of parent.commands) {
+          const path = `${prefix} ${command.name()}`;
+          process.stdout.write(`${path} — ${command.description()}\n`);
+          printCommands(command, path);
+        }
+      };
+      printCommands(program, "tara");
+    }
   });
 
 program
@@ -322,6 +336,7 @@ canvas
   .description("Add a single node to canvas")
   .requiredOption("-t, --text <text>", "Node text content")
   .option("--type <type>", "Node type (text, note, goal, image, chart, map, compute, model3d...)", "note")
+  .option("--layer <layerId>", "Spatial layer ID")
   .option("--x <x>", "X position", (v) => parseInt(v, 10), 100)
   .option("--y <y>", "Y position", (v) => parseInt(v, 10), 100)
   .option("--color <color>", "Node color (paper, sun, mint, sky, coral)")
@@ -354,6 +369,9 @@ canvas
   .option("--y <y>", "Y position", (value) => parseInt(value, 10))
   .option("--color <color>", "Canvas color", "paper")
   .option("--id <id>", "Stable canvas node ID")
+  .option("--layer <layerId>", "Spatial layer ID")
+  .option("--from <datetime>", "First valid UTC instant")
+  .option("--to <datetime>", "Last valid UTC instant")
   .option("--json", "Output machine-readable JSON")
   .action(async (projectId: string, name: string, opts) => {
     await runCanvasAddEntity(projectId, name, opts);
@@ -372,6 +390,9 @@ canvas
   .option("--line-style <style>", "Line style: solid, dashed, or dotted")
   .option("--arrow-style <style>", "Target marker: arrow, dot, diamond, or none")
   .option("--animated", "Animate directional flow along the edge")
+  .option("--layer <layerId>", "Spatial layer ID")
+  .option("--from <datetime>", "First valid UTC instant")
+  .option("--to <datetime>", "Last valid UTC instant")
   .option("--json", "Output machine-readable JSON")
   .action(async (projectId: string, sourceNodeId: string, targetNodeId: string, opts) => {
     await runCanvasConnect(projectId, sourceNodeId, targetNodeId, opts);
@@ -498,11 +519,57 @@ canvas
   });
 
 canvas
+  .command("timeline-demo <projectId>")
+  .description("Add a guided research-story animation with layers and keyframes")
+  .option("--json", "Output machine-readable demo details")
+  .action(async (projectId: string, opts: { json?: boolean }) => {
+    await runCanvasTimelineDemo(projectId, opts);
+  });
+
+canvas
+  .command("time <projectId>")
+  .description("Inspect nodes and ontology relationships valid at an exact UTC instant")
+  .option("--at <datetime>", "ISO-8601 date/time", new Date().toISOString())
+  .option("--json", "Output machine-readable temporal state")
+  .action(async (projectId: string, opts: { at?: string; json?: boolean }) => runCanvasTime(projectId, opts));
+
+canvas
+  .command("set-time <projectId> <nodeId>")
+  .description("Set the universal-time validity interval for a node or relationship")
+  .option("--from <datetime>", "First valid UTC instant")
+  .option("--to <datetime>", "Last valid UTC instant")
+  .option("--always", "Remove temporal bounds")
+  .option("--json", "Output machine-readable node state")
+  .action(async (projectId: string, nodeId: string, opts: { from?: string; to?: string; always?: boolean; json?: boolean }) => runCanvasSetTime(projectId, nodeId, opts));
+
+canvas
+  .command("layers <projectId>")
+  .description("List the spatial layers in a canvas")
+  .option("--json", "Output machine-readable layers")
+  .action(async (projectId: string, opts: { json?: boolean }) => runCanvasLayers(projectId, opts));
+
+canvas
+  .command("check <projectId>")
+  .description("Type-check the complete saved canvas against the live Tara contract")
+  .option("--json", "Output machine-readable validation result")
+  .action(async (projectId: string, opts: { json?: boolean }) => runCanvasCheck(projectId, opts));
+
+canvas
+  .command("add-layer <projectId> <name>")
+  .description("Add one spatial layer to a canvas")
+  .option("--id <id>", "Stable layer ID")
+  .option("--json", "Output machine-readable layer state")
+  .action(async (projectId: string, name: string, opts: { id?: string; json?: boolean }) => runCanvasAddLayer(projectId, name, opts));
+
+canvas
   .command("clear <projectId>")
   .description("Clear all nodes from canvas")
   .action(async (projectId: string) => {
     await runCanvasClear(projectId);
   });
+
+registerAgentWorkflow(program);
+program.addHelpText("after", "\nAgent quickstart (offline): tara agent\nCurrent project: tara use <project>, then use @current.\nLocal batches: tara draft init @current task.json; tara draft preview task.json; tara draft commit task.json\n");
 
 try {
   await program.parseAsync();
