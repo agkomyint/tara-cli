@@ -1,6 +1,7 @@
 node_modules/
 dist/
 *.log
+*.tgz
 *.snapshot.json
 .tara-project.json
 deep_tech_asean.json
