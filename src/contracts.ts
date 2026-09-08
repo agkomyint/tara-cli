@@ -1,5 +1,5 @@
-export type { TaraCanvasNode as CanvasNode, TaraCanvasDocument as CanvasDocument, TaraCanvasCamera as CanvasCamera } from "@tara/canvas-core";
-import type { TaraCanvasCamera, TaraCanvasDocument } from "@tara/canvas-core";
+export type { TaraCanvasNode as CanvasNode, TaraCanvasDocument as CanvasDocument, TaraCanvasCamera as CanvasCamera } from "@taraspace/canvas-core";
+import type { TaraCanvasCamera, TaraCanvasDocument } from "@taraspace/canvas-core";
 
 export type CanvasResponse = {
   projectId: string;

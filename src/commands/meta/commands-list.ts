@@ -11,7 +11,7 @@ export const CLI_COMMAND_TREE: CommandDef[] = [
     name: "auth",
     syntax: "tara login [--url <url>]",
     description: "Authenticate with your Tara API key",
-    options: [{ flag: "--url <url>", description: "Tara server URL (default: http://localhost:3000)" }],
+    options: [{ flag: "--url <url>", description: "Tara server URL (default: https://taraspace.space)" }],
   },
   {
     name: "projects",

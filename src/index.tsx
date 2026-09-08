@@ -97,7 +97,7 @@ program
 program
   .command("login")
   .description("Authenticate with your Tara API key")
-  .option("--url <url>", "Tara server URL (default: http://localhost:3000)")
+  .option("--url <url>", "Tara server URL (default: https://taraspace.space)")
   .action(async (opts: { url?: string }) => {
     await runLogin(opts.url);
   });

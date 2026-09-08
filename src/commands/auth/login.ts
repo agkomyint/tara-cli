@@ -2,7 +2,7 @@ import * as p from "@clack/prompts";
 import { readConfig, writeConfig } from "../../config.js";
 
 export async function runLogin(baseUrl?: string) {
-  const base = baseUrl ?? readConfig().baseUrl ?? "http://localhost:3000";
+  const base = baseUrl ?? readConfig().baseUrl ?? "https://taraspace.space";
 
   p.intro("  Tara CLI — Login  ");
 

@@ -18,13 +18,13 @@ npm link        # registers `tara` globally — re-run this after re-cloning
 **From npm (once published):**
 
 ```bash
-npm install -g @tara/cli
+npm install -g @taraspace/cli
 ```
 
 Or use without installing:
 
 ```bash
-npx @tara/cli login
+npx @taraspace/cli login
 ```
 
 ## Setup
@@ -39,10 +39,10 @@ tara login
 # Config saved to ~/.tara/config.json
 ```
 
-By default the CLI talks to `http://localhost:3000`. Point it at production:
+By default the CLI talks to `https://taraspace.space`. Point it at a local server when developing:
 
 ```bash
-tara login --url https://taraspace.space
+tara login --url http://localhost:3000
 ```
 
 ## Commands

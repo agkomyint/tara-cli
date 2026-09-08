@@ -1,6 +1,6 @@
 # Tara CLI Command Reference & Canvas Specification Guide
 
-This reference documents the complete hierarchical command tree for `@tara/cli`. You can query this structure live in the terminal at any time using:
+This reference documents the complete hierarchical command tree for `@taraspace/cli`. You can query this structure live in the terminal at any time using:
 
 ```bash
 tara commands        # Human-readable tree view
@@ -49,7 +49,7 @@ tara
 Authenticates the CLI using a Tara API Key (`tara_...`).
 ```bash
 tara login
-# Prompts for API key. Keys can be created at http://localhost:3000/settings/api-keys
+# Prompts for an API key. Keys can be created at https://taraspace.space/settings/api-keys
 ```
 
 ---
